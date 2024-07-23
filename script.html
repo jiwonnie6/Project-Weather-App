@@ -7,12 +7,21 @@
   <title>Weather App</title>
 </head>
 <body>
-  <div class="inputCityWrapper">
-    <input id="cityInput">
+  <div class="headerWrapper">
+    <div class="inputCityWrapper">
+      <input id="cityInput">
     <button type="submit" id="searchButton">Search</button>
+    </div>
+    <div class="toggle">
+      <label class="switch">
+        <input type="checkbox" id="unitToggle">
+        <span class="slider round" id="span">C&deg;</span>
+      </label>
+    </div>
   </div>
 
-  <div id="dataWrapper">
+  <div id="dataBox">
+    <div id="dataWrapper"></div>
   </div>
 
   <script src="index.js"></script>

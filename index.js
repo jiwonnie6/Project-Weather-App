@@ -1,3 +1,28 @@
+let currentWeatherData = null;
+
+// toggle function
+document.getElementById("unitToggle").addEventListener("change", function() {
+  const unitSpan = document.getElementById("span");
+  if (this.checked) {
+      unitSpan.innerHTML = `F&deg;`;
+  } else {
+      unitSpan.innerHTML = `C&deg;`;
+  }
+
+  if (currentWeatherData) {
+    displayWeatherData(
+        currentWeatherData.condition,
+        currentWeatherData.cityTempF,
+        currentWeatherData.cityFeelsLikeF,
+        currentWeatherData.cityName,
+        currentWeatherData.cityRegion,
+        currentWeatherData.cityCountry,
+        currentWeatherData.uv,
+        currentWeatherData.cityTempC,
+        currentWeatherData.cityFeelsLikeC
+    );
+  }
+});
 
 const searchButton = document.getElementById("searchButton");
 
@@ -14,8 +39,18 @@ async function getWeatherData(cityName) {
 
   const weather = weatherData(cityData);
 
-  displayWeatherData(weather.condition, weather.cityTempF, weather.cityFeelsLikeF, weather.cityName, weather.cityRegion, weather.cityCountry, weather.uv, weather.cityTempC, weather.cityFeelsLikeC)
+  currentWeatherData = weather;
+
+  displayWeatherData(weather.condition, weather.cityTempF, weather.cityFeelsLikeF, weather.cityName, weather.cityRegion, weather.cityCountry, weather.uv, weather.cityTempC, weather.cityFeelsLikeC, weather.logo)
 };
+
+async function getGifCondition(condition) {
+  const response = await fetch(`https://api.giphy.com/v1/gifs/translate?api_key=gFwalcYK4gXeetAeYpwdpApm7eMvf20X&s=${condition}`, {mode: 'cors'});
+
+  const gifData = await response.json();
+
+  return gifData.data.images.original.url;
+}
 
 function weatherData(cityData) {
   // city temperature datas
@@ -30,13 +65,15 @@ function weatherData(cityData) {
 
   uv = cityData.current.uv;
 
+  logo = cityData.current.condition.icon;
+
   // city area locations
   cityName = cityData.location.name;
   cityRegion = cityData.location.region;
   cityCountry = cityData.location.country;
 
   // console.log(cityData);
-  console.log(`condition: ${condition}, cityName: ${cityName}, Region: ${cityRegion}, Country: ${cityCountry}, TempF/TempC: ${cityTempF}/${cityTempC}, FeelsLikeF/C: ${cityFeelsLikeF}/${cityFeelsLikeC}, humidity: ${humidity}, uv: ${uv}`);
+  console.log(`condition: ${condition}, cityName: ${cityName}, Region: ${cityRegion}, Country: ${cityCountry}, TempF/TempC: ${cityTempF}/${cityTempC}, FeelsLikeF/C: ${cityFeelsLikeF}/${cityFeelsLikeC}, humidity: ${humidity}, uv: ${uv}, logo: ${logo}`);
 
   var obj = {
     condition: condition,
@@ -50,24 +87,39 @@ function weatherData(cityData) {
     cityRegion: cityRegion,
     cityCountry: cityCountry,
 
-    uv: uv
+    uv: uv,
+
+    logo: logo
   }
 
   console.log(obj);
   return obj;
 };
 
-function displayWeatherData(condition, cityTempF, cityFeelsLikeF, cityName, cityRegion, cityCountry, uv, cityTempC, cityFeelsLikeC) {
+function displayWeatherData(condition, cityTempF, cityFeelsLikeF, cityName, cityRegion, cityCountry, uv, cityTempC, cityFeelsLikeC, logo) {
 
   const dataWrapper = document.getElementById("dataWrapper");
   dataWrapper.innerHTML = '';
 
+  const background = document.querySelector("body");
+  getGifCondition(condition).then(gifUrl => {
+    background.style.backgroundImage = `url(${gifUrl})`;
+  }).catch(error => {
+    console.error('Error fetching GIF:', error);
+    background.style.backgroundImage = ''; // Default or no background if fetch fails
+  });
+
   const div = document.createElement("div");
 
   const conditionCity = document.createElement("div");
+  // const conditionIcon = document.createElement("img");
+
   conditionCity.classList.add("conditionOfCity");
+  // conditionIcon.classList.add("conditionLogo");
+
   conditionCity.textContent = condition;
-  // dataWrapper.appendChild(conditionCity);
+  // conditionIcon.src = logo;
+  // conditionCity.appendChild(conditionIcon);
   div.appendChild(conditionCity);
 
   const location = document.createElement("div");
@@ -78,8 +130,13 @@ function displayWeatherData(condition, cityTempF, cityFeelsLikeF, cityName, city
 
   const dataInfo = document.createElement("div");
   dataInfo.classList.add("weatherInfo");
-  dataInfo.innerHTML = `Temperature: ${cityTempF}&deg;F / ${cityTempC}&deg;C &nbsp&nbsp Feels Like: ${cityFeelsLikeF}&deg;F / ${cityFeelsLikeC}&deg;C &nbsp&nbsp UV: ${uv}`;
-  // dataWrapper.appendChild(dataInfo);
+
+  const toggle = document.getElementById("unitToggle");
+  if (toggle.checked) {
+    dataInfo.innerHTML = `Temperature: ${cityTempF}&deg;F &nbsp&nbsp Feels Like: ${cityFeelsLikeF}&deg;F &nbsp&nbsp UV: ${uv}`;
+  } else {
+    dataInfo.innerHTML = `Temperature: ${cityTempC}&deg;C &nbsp&nbsp Feels Like: ${cityFeelsLikeC}&deg;C &nbsp&nbsp UV: ${uv}`;
+  }
   div.appendChild(dataInfo);
 
   dataWrapper.appendChild(div);
